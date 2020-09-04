@@ -4,6 +4,7 @@ from janome.tokenizer import Tokenizer
 from janome.analyzer import Analyzer
 from janome.tokenfilter import *
 import re
+import time
 """
 コードの大まかな流れ
 
@@ -29,35 +30,41 @@ page_no = re.findall('[0-9]+', elems_page[0].text)
 #page_noは配列になっていてそれぞれの要素には各ページの先頭掲示板番号が代入されている
 last = int(page_no[len(page_no) - 1])#最終ページの先頭掲示板番号はpage_noの最後の要素に入っているのでそれをlast変数に格納。intに型変換
 
-print(last)
+page_title = 'https://dic.nicovideo.jp/b/a/%E5%8D%AF%E6%9C%88%E3%82%B3%E3%82%A6/'
+all_text = ''
 
+for page in range(0, last, 30):
+    print(page + 1)
+    get_url_info = requests.post(page_title + (str)(page + 1))#
+    soup = BeautifulSoup(get_url_info.text, 'html.parser')#
 
-get_url_info = requests.post('https://dic.nicovideo.jp/b/a/%E5%8D%AF%E6%9C%88%E3%82%B3%E3%82%A6/1-')#
-soup = BeautifulSoup(get_url_info.text, 'html.parser')#
+    elems_no = soup.select('.st-bbs_resNo')#
+    elems_info = soup.select('.st-bbs_resInfo')#
+    elems_body = soup.select('.st-bbs_resbody')#
+    
+    """
+    with open('test.txt', 'w'):#
+        pass#
 
-elems_no = soup.select('.st-bbs_resNo')#
-elems_info = soup.select('.st-bbs_resInfo')#
-elems_body = soup.select('.st-bbs_resbody')#
-with open('test.txt', 'w'):#
-    pass#
-m = ""#
-
-for i in range(len(elems_no)):#
-    with open('test.txt', mode='a',encoding='utf_8') as f:#
-        f.write(elems_no[i].text.replace(" ","").replace("\n",""))#
-        f.write("\n")#
-        f.write(elems_info[i].text.replace(" ","").replace("\n",""))#
-        f.write("\n")#
-        f.write(elems_body[i].text.replace(" ","").replace("\n",""))#
-        f.write("\n")#
-
-    m += elems_body[i].text.replace(" ","").replace("\n","")#
-    t = Tokenizer()#
+    for i in range(len(elems_no)):#
+        with open('test.txt', mode='a',encoding='utf_8') as f:#
+            f.write(elems_no[i].text.replace(" ","").replace("\n",""))#
+            f.write("\n")#
+            f.write(elems_info[i].text.replace(" ","").replace("\n",""))#
+            f.write("\n")#
+            f.write(elems_body[i].text.replace(" ","").replace("\n",""))#
+            f.write("\n")#
+    """
+    for i in range(len(elems_no)):
+        all_text += elems_body[i].text.replace(" ","").replace("\n","")#
+        t = Tokenizer()#
+    
+    time.sleep(5)
 
 cnt = []#
-token_filters = [POSKeepFilter('名詞,形容詞'), TokenCountFilter()]#
+token_filters = [POSKeepFilter('名詞'), TokenCountFilter()]#
 a = Analyzer(token_filters=token_filters)#
-for k, v in a.analyze(m):#
+for k, v in a.analyze(all_text):#
     temp = [k, v]#
     cnt.append(temp)#
 
