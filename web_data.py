@@ -5,6 +5,7 @@ from janome.analyzer import Analyzer
 from janome.tokenfilter import *
 import re
 import time
+import sys
 """
 コードの大まかな流れ
 
@@ -17,7 +18,9 @@ import time
 4.string変数を解析して含まれている単語を分析
 """
 
-get_url_info = requests.post('https://dic.nicovideo.jp/b/a/%E5%8D%AF%E6%9C%88%E3%82%B3%E3%82%A6/1-')#対象ページへリクエストを送信
+title = sys.argv
+
+get_url_info = requests.post('https://dic.nicovideo.jp/b/a/'+title[1]+'/1-')#対象ページへリクエストを送信
 soup = BeautifulSoup(get_url_info.text, 'html.parser')#THMLソースを形態素解析できる形に変換
 
 elems_page = soup.select('.st-pg_contents')#HTMLソースのうち[st-pg_contens]のクラスに属する要素のみを取得
@@ -30,8 +33,11 @@ page_no = re.findall('[0-9]+', elems_page[0].text)
 #page_noは配列になっていてそれぞれの要素には各ページの先頭掲示板番号が代入されている
 last = int(page_no[len(page_no) - 1])#最終ページの先頭掲示板番号はpage_noの最後の要素に入っているのでそれをlast変数に格納。intに型変換
 
-page_title = 'https://dic.nicovideo.jp/b/a/%E5%8D%AF%E6%9C%88%E3%82%B3%E3%82%A6/'
+page_title = 'https://dic.nicovideo.jp/b/a/'+title[1]+'/'
 all_text = ''
+
+print((last - 1) / 30 * 5 / 60,'分')
+
 
 for page in range(0, last, 30):
     print(page + 1)
@@ -41,20 +47,7 @@ for page in range(0, last, 30):
     elems_no = soup.select('.st-bbs_resNo')#
     elems_info = soup.select('.st-bbs_resInfo')#
     elems_body = soup.select('.st-bbs_resbody')#
-    
-    """
-    with open('test.txt', 'w'):#
-        pass#
 
-    for i in range(len(elems_no)):#
-        with open('test.txt', mode='a',encoding='utf_8') as f:#
-            f.write(elems_no[i].text.replace(" ","").replace("\n",""))#
-            f.write("\n")#
-            f.write(elems_info[i].text.replace(" ","").replace("\n",""))#
-            f.write("\n")#
-            f.write(elems_body[i].text.replace(" ","").replace("\n",""))#
-            f.write("\n")#
-    """
     for i in range(len(elems_no)):
         all_text += elems_body[i].text.replace(" ","").replace("\n","")#
         t = Tokenizer()#
@@ -71,4 +64,3 @@ for k, v in a.analyze(all_text):#
 cnt.sort(key=lambda x: x[1])#
 for i in cnt:#
     print(i[0], ":", i[1])#
-
